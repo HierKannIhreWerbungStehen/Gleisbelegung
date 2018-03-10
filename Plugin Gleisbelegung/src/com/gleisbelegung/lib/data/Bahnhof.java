@@ -1,19 +1,26 @@
 package com.gleisbelegung.lib.data;
 
+import com.gleisbelegung.LabelContainer;
+
 import java.util.ArrayList;
 
 public class Bahnhof {
     private int id;
     private String name;
     private ArrayList<Bahnsteig> bahnsteige;
+    private ArrayList<LabelContainer> bahnhofLabel;
     private boolean sichtbar;
 
     public Bahnhof(int id, String name){
         this.id = id;
         this.name = name;
         this.bahnsteige = new ArrayList<>();
+        bahnhofLabel = new ArrayList<>();
     }
 
+    public int getId(){
+        return id;
+    }
     public String getName() {
         return name;
     }
@@ -50,5 +57,12 @@ public class Bahnhof {
                 ", name='" + name + '\'' +
                 ", bahnsteige=" + bahnsteige +
                 '}';
+    }
+
+    public ArrayList<LabelContainer> getBahnhofLabel() {
+        return bahnhofLabel;
+    }
+    public void addBahnhofLabel(LabelContainer bahnhofLabel) {
+        this.bahnhofLabel.add(bahnhofLabel);
     }
 }
