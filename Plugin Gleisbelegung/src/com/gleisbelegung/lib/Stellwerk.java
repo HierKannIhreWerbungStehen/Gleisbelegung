@@ -25,20 +25,16 @@ public class Stellwerk {
 
     private static Verbindung v;
 
-    public Stellwerk(String host, int port, String pluginName, String pluginBeschreibung, String autor, int version){
+    public Stellwerk(String host, int port, String pluginName, String pluginBeschreibung, String autor, int version) throws IOException {
         Stellwerk.host = host;
         Stellwerk.port = port;
 
-        try {
-            startzeit = System.currentTimeMillis();
-            bahnhoefe = new ArrayList<>();
-            zuege = new ArrayList<>();
+        startzeit = System.currentTimeMillis();
+        bahnhoefe = new ArrayList<>();
+        zuege = new ArrayList<>();
 
-            v = new Verbindung(new Socket(host, port), this, pluginName, pluginBeschreibung, autor, version);
-            v.update();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        v = new Verbindung(new Socket(host, port), this, pluginName, pluginBeschreibung, autor, version);
+        v.update();
     }
 
     void errorWindow(int exitCode, String message){
@@ -58,12 +54,6 @@ public class Stellwerk {
                 bahnhoefe.get(bahnhoefe.size()-1).getBahnsteige().add(new Bahnsteig(bahnhoefe.get(bahnhoefe.size()-1), bahnsteige[i], i));
             }
         }
-
-        /*for(Bahnhof b : bahnhoefe){
-            for(Bahnsteig ba : b.getBahnsteige()){
-                System.out.println(b.getName() + " " + ba.getName());
-            }
-        }*/
     }
 
     public boolean aktualisiereDaten(){

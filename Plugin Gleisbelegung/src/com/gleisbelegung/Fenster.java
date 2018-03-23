@@ -25,6 +25,9 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.media.AudioClip;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
 import javafx.stage.Stage;
@@ -193,7 +196,7 @@ public class Fenster{
         Pane content = new Pane(spBahnhof, spPlatform, spContent, spTime, scrollBarWidth, scrollBarHeight, firstLabel);
 
         informations = new Pane();
-        informations.setStyle("-fx-background-color: #404040");
+        informations.setStyle("-fx-background-color: #404040;");
         informations.setMinWidth(Einstellungen.informationenBreite);
         informations.setMaxWidth(Einstellungen.informationenBreite);
         spInformations = new ScrollPane(informations);
@@ -254,19 +257,14 @@ public class Fenster{
             for (int i = 0; i < bahnhof.getBahnsteige().size(); i++) {
                 LabelContainer lc = new LabelContainer(i,null);
                 lc.updateLabel(bahnhof.getBahnsteig(i).getName(), true);
-                lc.getLabel().setStyle("-fx-text-fill: #fff; -fx-border-color: #505050; -fx-border-width: 0 1 5 0;");
+                lc.getAussehen().textFarbe = "#fff";
+                lc.getAussehen().raender.farbeUnten = "#505050";
+                lc.getAussehen().raender.farbeRechts = "#505050";
+                lc.getAussehen().raender.setze(0, 1, 5, 0);
+                lc.getLabel().setStyle(lc.getAussehen().toCSSStyle());
 
                 int temp = bahnhof.getBahnsteig(i).getId();
                 Platform.runLater(() -> gpPlatform.add(lc.getLabel(), temp, 0));
-
-                final int tempI = i;
-                lc.getLabel().setOnMouseClicked(e -> {
-                    if(e.getButton() == MouseButton.PRIMARY){
-                        bahnhof.getBahnsteig(tempI).hebeHervor();
-                    } else if(e.getButton() == MouseButton.SECONDARY){
-                        aendereReihenfolge(bahnhof.getBahnsteig(tempI));
-                    }
-                });
                 bahnhof.getBahnsteig(i).setGleisLabel(lc);
             }
         }
@@ -799,7 +797,6 @@ public class Fenster{
         TextField tfv = new TextField(String.valueOf(Einstellungen.vorschau));
         tfv.setTranslateX(300);
         tfv.setTranslateY(40);
-        tfv.setDisable(true);
 
         Label sb = new Label("Spaltenbreite (in px):");
         sb.setFont(Font.font(18));
@@ -836,22 +833,11 @@ public class Fenster{
         if(Einstellungen.informationenAnzeigen) cbezi.setSelected(true);
         if(! Einstellungen.informationenAnzeigen) cbezi.setSelected(false);
 
-        Label tmb = new Label("Ton bei Mehrfachbelegung:");
-        tmb.setFont(Font.font(18));
-        tmb.setTranslateY(220);
-        tmb.setTranslateX(10);
-        CheckBox cbtmb = new CheckBox();
-        cbtmb.setTranslateX(300);
-        cbtmb.setTranslateY(220);
-        cbtmb.setFont(Font.font(18));
-        if(Einstellungen.soundAbspielen) cbtmb.setSelected(true);
-        if(! Einstellungen.soundAbspielen) cbtmb.setSelected(false);
-
-
         Pane gleise = new Pane();
         gleise.setTranslateX(0);
         gleise.setTranslateY(290);
 
+        stageHeight = 290;
 
         CheckBox[] cbBahnhof = new CheckBox[stellwerk.getBahnhoefe().size()];
         CheckBox[] cbGleis = new CheckBox[stellwerk.getAnzahlBahnsteige()];
@@ -864,7 +850,7 @@ public class Fenster{
             tempY += 30;
             CheckBox cb = new CheckBox(bahnhof.getName());
             if ("".equals(cb.getText())) {
-                cb.setText("Bahnhof");
+                cb.setText(stellwerk.getStellwerksname());
             }
             cbBahnhof[counterBhf] = cb;
             cbBahnhof[counterBhf].setTranslateX(10);
@@ -889,7 +875,6 @@ public class Fenster{
                 cbGleis[counterGleis].selectedProperty().bindBidirectional(bahnhof.getBahnsteig(i).getSichtbarProperty());
 
                 if (i % 2 != 0 && i < bahnhof.getBahnsteige().size() - 1) {
-                    stageHeight += 30;
                     tempY += 30;
                     tempX = 190;
                 } else {
@@ -903,7 +888,8 @@ public class Fenster{
             }
             tempX = 190;
         }
-        stageHeight += tempY + 120;
+
+        stageHeight += tempY + 100; //+100 der Schönheit wegen
 
         Label laaoaw = new Label("Alle Gleise An- oder Abwählen:");
         laaoaw.setFont(Font.font(18));
@@ -935,7 +921,6 @@ public class Fenster{
                 Einstellungen.schriftgroesse = Integer.parseInt(tffs.getText());
                 Einstellungen.informationenBreite = Integer.parseInt(tfzib.getText());
                 Einstellungen.informationenAnzeigen = cbezi.isSelected();
-                Einstellungen.soundAbspielen = cbtmb.isSelected();
 
                 if(Einstellungen.vorschau != Integer.parseInt(tfv.getText())){
                     Einstellungen.vorschau = Integer.parseInt(tfv.getText());
@@ -975,7 +960,7 @@ public class Fenster{
         Pane p = new Pane();
         p.setPrefWidth(stageWidth);
         p.setPrefHeight(stageHeight);
-        p.getChildren().addAll(ai, tfai, v, tfv, sb, tfsb, fs, tffs, zib, tfzib, ezi, laaoaw, cbaaoaw, cbezi, gleise, speichern, tmb, cbtmb);
+        p.getChildren().addAll(ai, tfai, v, tfv, sb, tfsb, fs, tffs, zib, tfzib, ezi, laaoaw, cbaaoaw, cbezi, gleise, speichern);
         p.setStyle("-fx-background: #303030; -fx-padding: 0;");
 
         ScrollPane sp = new ScrollPane(p);
@@ -984,8 +969,8 @@ public class Fenster{
         sp.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
         Scene scene;
-        if(stageHeight > primaryStage.getHeight()){
-            scene = new Scene(sp, stageWidth, primaryStage.getHeight());
+        if(stageHeight > primaryStage.getHeight() - 100){ //Fenster kann nun nicht mehr unter der Taskleiste flimmern
+            scene = new Scene(sp, stageWidth, primaryStage.getHeight() - 100); //Fenster kann nun nicht mehr unter der Taskleiste flimmern
         } else{
             scene = new Scene(sp, stageWidth, stageHeight);
         }
@@ -1031,7 +1016,7 @@ public class Fenster{
         firstLabel.setMinWidth(Einstellungen.spaltenbreite);
     }
 
-    private void sortiereGleise(){
+    public void sortiereGleise(){
         Platform.runLater(() -> {
             sortierteGleise = new ArrayList<>();
             for(Bahnhof bahnhof : stellwerk.getBahnhoefe()){
@@ -1048,6 +1033,7 @@ public class Fenster{
             int y = 0;
             for(Bahnsteig b : sortierteGleise){
                 gpPlatform.addColumn(x,b.getGleisLabel().getLabel());
+                b.setOrderId(x);
                 for(LabelContainer lc : b.getSpalte()){
                     try {
                         gp.add(lc.getLabel(), x, y);
@@ -1065,56 +1051,22 @@ public class Fenster{
         });
     }
 
-    private void aendereReihenfolge(Bahnsteig bahnsteig){
-        Stage stage = new Stage();
-
-        Label l = new Label("Reihenfolge festlegen:");
-        l.setStyle("-fx-text-fill: white;");
-        l.setFont(Font.font(Einstellungen.schriftgroesse));
-        l.setTranslateY(25);
-        l.setTranslateX(25);
-
-        TextField tf = new TextField(String.valueOf(bahnsteig.getOrderId()+1));
-        tf.setFont(Font.font(Einstellungen.schriftgroesse-3));
-        tf.setTranslateX(25);
-        tf.setTranslateY(60);
-
-        Button b = new Button("Speichern");
-        b.setFont(Font.font(Einstellungen.schriftgroesse));
-        b.setTranslateX(25);
-        b.setTranslateY(120);
-        b.setOnAction(e -> {
-            bahnsteig.setOrderId(Integer.parseInt(tf.getText())-1);
-            stage.close();
-            sortiereGleise();
-        });
-
-        Pane p = new Pane(l,tf,b);
-        p.setStyle("-fx-background-color: #303030;");
-        p.setMinSize(500,200);
-        p.setMaxSize(500, 200);
-
-        Scene scene = new Scene(p, 300,200);
-
-        stage.setScene(scene);
-        stage.show();
-        stage.setAlwaysOnTop(true);
-    }
-
     private void erzeugeBahnsteigLabel(){
         int aufeinanderfolgendeBahnsteige = 1;
         Bahnsteig letzterBahnsteig = null;
+        ArrayList<Bahnsteig> bahnsteige = new ArrayList<>();
         int counter = 0;
 
         gpBahnhof.getChildren().clear();
 
         for(Bahnsteig bahnsteig : sortierteGleise){
             if(bahnsteig.isSichtbar()){
-                bahnsteig.getBahnhof().getBahnhofLabel().clear();
+                bahnsteig.getBahnhof().getBahnhofTeile().clear();
 
                 if(bahnsteig.getGleisLabel().isLetzterBahnsteig()){
                     bahnsteig.getGleisLabel().setLetzterBahnsteig(false);
-                    bahnsteig.getGleisLabel().getLabel().setStyle(bahnsteig.getGleisLabel().getLabel().getStyle() + " -fx-border-width: 0 1 5 0;");
+                    bahnsteig.getGleisLabel().getAussehen().raender.setze(0, 1, 5, 0);
+                    bahnsteig.getGleisLabel().getLabel().setStyle(bahnsteig.getGleisLabel().getAussehen().toCSSStyle());
                 }
                 for(LabelContainer lc : bahnsteig.getSpalte()){
                     lc.setLetzterBahnsteig(false);
@@ -1124,23 +1076,34 @@ public class Fenster{
                 if(letzterBahnsteig != null && letzterBahnsteig.getBahnhof().getId() == bahnsteig.getBahnhof().getId()){
                     if(bahnsteig.isSichtbar()){
                         aufeinanderfolgendeBahnsteige++;
+                        bahnsteige.add(letzterBahnsteig);
                     }
                 } else if(letzterBahnsteig != null){
                     LabelContainer lc = new LabelContainer(-1, null);
-                    lc.getLabel().setText("Hallo " + letzterBahnsteig.getBahnhof().getName() + " Test");
-                    letzterBahnsteig.getBahnhof().addBahnhofLabel(lc);
+                    if(!letzterBahnsteig.getBahnhof().getName().equals("")) lc.getLabel().setText(letzterBahnsteig.getBahnhof().getName());
+                    else lc.getLabel().setText(stellwerk.getStellwerksname());
+
+                    bahnsteige.add(letzterBahnsteig);
+                    letzterBahnsteig.getBahnhof().addBahnhofLabel(lc, new ArrayList<>(bahnsteige));
+                    bahnsteige.clear();
 
                     final int tempCounter = aufeinanderfolgendeBahnsteige;
                     final int temp = counter;
                     Platform.runLater(() -> {
-                        lc.getLabel().setStyle("-fx-border-width: 0 5 1 0; -fx-border-color: #505050;");
+                        lc.getAussehen().textFarbe = "#fff";
+                        lc.getAussehen().raender.farbeUnten = "#505050";
+                        lc.getAussehen().raender.farbeRechts = "#505050";
+                        lc.getAussehen().raender.setze(0, 5, 1, 0);
                         lc.getLabel().setMinWidth(Einstellungen.spaltenbreite * tempCounter);
                         lc.getLabel().setMaxWidth(Einstellungen.spaltenbreite * tempCounter);
+                        lc.getLabel().setStyle(lc.getAussehen().toCSSStyle());
                         gpBahnhof.add(lc.getLabel(), temp, 0);
                     });
 
                     letzterBahnsteig.getGleisLabel().setLetzterBahnsteig(true);
-                    letzterBahnsteig.getGleisLabel().getLabel().setStyle(letzterBahnsteig.getGleisLabel().getLabel().getStyle() + " -fx-border-width: 0 5 5 0;");
+                    letzterBahnsteig.getGleisLabel().getAussehen().raender.setze(0, 5, 5, 0);
+                    letzterBahnsteig.getGleisLabel().getLabel().setStyle(letzterBahnsteig.getGleisLabel().getAussehen().toCSSStyle());
+
                     for(LabelContainer labelContainer : letzterBahnsteig.getSpalte()){
                         labelContainer.setLetzterBahnsteig(true);
                         labelContainer.updateLabel();
@@ -1155,23 +1118,49 @@ public class Fenster{
         }
 
         LabelContainer lc = new LabelContainer(-1, null);
-        lc.getLabel().setText("Hallo " + letzterBahnsteig.getBahnhof().getName() + " Test");
-        letzterBahnsteig.getBahnhof().addBahnhofLabel(lc);
+        if(!letzterBahnsteig.getBahnhof().getName().equals("")) lc.getLabel().setText(letzterBahnsteig.getBahnhof().getName());
+        else lc.getLabel().setText(stellwerk.getStellwerksname());
+
+        bahnsteige.add(letzterBahnsteig);
+        letzterBahnsteig.getBahnhof().addBahnhofLabel(lc, new ArrayList<>(bahnsteige));
+        bahnsteige.clear();
 
         final int tempCounter = aufeinanderfolgendeBahnsteige;
         final int temp = counter;
         Platform.runLater(() -> {
-            lc.getLabel().setStyle("-fx-border-width: 0 5 1 0; -fx-border-color: #505050;");
+            lc.getAussehen().textFarbe = "#fff";
+            lc.getAussehen().raender.farbeUnten = "#505050";
+            lc.getAussehen().raender.farbeRechts = "#505050";
+            lc.getAussehen().raender.setze(0, 5, 1, 0);
+            lc.getLabel().setStyle(lc.getAussehen().toCSSStyle());
+
             lc.getLabel().setMinWidth(Einstellungen.spaltenbreite * tempCounter);
             lc.getLabel().setMaxWidth(Einstellungen.spaltenbreite * tempCounter);
             gpBahnhof.add(lc.getLabel(), temp, 0);
         });
 
         letzterBahnsteig.getGleisLabel().setLetzterBahnsteig(true);
-        letzterBahnsteig.getGleisLabel().getLabel().setStyle(letzterBahnsteig.getGleisLabel().getLabel().getStyle() + " -fx-border-width: 0 5 5 0;");
+        letzterBahnsteig.getGleisLabel().getAussehen().raender.setze(0, 5, 5, 0);
+        letzterBahnsteig.getGleisLabel().getLabel().setStyle(letzterBahnsteig.getGleisLabel().getAussehen().toCSSStyle());
         for(LabelContainer labelContainer : letzterBahnsteig.getSpalte()){
             labelContainer.setLetzterBahnsteig(true);
             labelContainer.updateLabel();
+        }
+    }
+
+    public void zeigeOrderIds(){
+        for(Bahnhof b : stellwerk.getBahnhoefe()){
+            for(Bahnsteig ba : b.getBahnsteige()){
+                ba.getGleisLabel().getLabel().setText(ba.getName() + " (" + ba.getOrderId() + ")");
+            }
+        }
+    }
+
+    public void versteckeOrderIds(){
+        for(Bahnhof b : stellwerk.getBahnhoefe()){
+            for(Bahnsteig ba : b.getBahnsteige()){
+                ba.getGleisLabel().getLabel().setText(ba.getName());
+            }
         }
     }
 }
