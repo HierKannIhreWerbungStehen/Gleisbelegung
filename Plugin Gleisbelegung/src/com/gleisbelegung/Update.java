@@ -20,6 +20,7 @@ import java.net.URL;
 import java.util.Scanner;
 
 public class Update {
+    private int neusteVersion;
 
     //Checkt auf neue Versionen
     public void checkForNewVersion(int currentVersion){
@@ -27,10 +28,10 @@ public class Update {
             URL url = new URL("http://www.manuel-serret.bplaced.net/Gleisbelegung/version.txt");
             Scanner sc = new Scanner(url.openStream());
 
-            int version = Integer.parseInt(sc.nextLine());
+            neusteVersion = Integer.parseInt(sc.nextLine());
             sc.close();
 
-            if(version <= currentVersion){
+            if(neusteVersion <= currentVersion){
                 //System.out.println("All Files are up to date!");
             } else{
                 //System.out.println("Update needed!");
@@ -73,5 +74,9 @@ public class Update {
         } catch (Exception e) {
             //e.printStackTrace();
         }
+    }
+
+    public int getNeusteVersion(){
+        return neusteVersion;
     }
 }
